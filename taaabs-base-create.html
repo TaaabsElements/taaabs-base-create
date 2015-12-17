@@ -1,0 +1,361 @@
+<!-- 
+  TODO : Use Samotrace to create the base !!
+-->  
+
+<link rel="import" href="../polymer/polymer.html">
+
+<dom-module id="taaabs-base-create">
+  <template>
+    <style>
+      :host{
+        display: block;
+        width: 100%;
+      }
+      
+      :host > paper-input{
+        display:inline-block;
+        width:40%;
+      }
+      :host > paper-icon-button{
+        display:inlin-block;
+        width:8%
+      }
+      :host > paper-icon-button[icon="link"]{
+        color: black;
+      }
+      :host > paper-icon-button[icon="more-horiz"]{
+        color: #D2D7D3; /* PUMICE */
+      }
+      :host > .labelIDlink:hover{
+        color: #4183D7; /* ROYAL BLUE */
+      }
+      :host > #baseLabelInput{
+        margin-left: 5%;
+      }
+    </style>
+    
+    <paper-input id="baseLabelInput"
+                 label="Base label"
+                 value="{{baseLabel}}">
+         <paper-icon-button id="baseLabelIcon"
+                            icon="create"
+                            suffix
+                            disabled
+                            style="color:grey">
+         </paper-icon-button>     
+    </paper-input>             
+                 
+    <paper-icon-button class="labelIDlink"
+                       icon="link"
+                       on-click="_toggleLink"
+                       hidden$="{{!linkActive}}"
+                       noink>
+    </paper-icon-button>      
+    <paper-icon-button class="labelIDlink"
+                       icon="more-horiz"
+                       on-click="_toggleLink"
+                       hidden$="{{linkActive}}"
+                       noink>
+    </paper-icon-button>                             
+    
+    <paper-input id="baseIdInput"
+                 label="Base ID"
+                 value="{{baseId}}"
+                 error-message="Invalid ID">
+        <paper-icon-button id="baseIdIcon"
+                           icon="create"
+                           suffix
+                           disabled
+                           style="color:grey">
+        </paper-icon-button>  
+    </paper-input>             
+    
+  </template>
+
+  <script>
+      /* global Polymer */
+      
+      /**
+<taaabs-base-create>` is a graphical element with 2 inputs: one to define a new base label, the other a new base ID.
+Binding a callback object to 'callback' is required to get the response of the request. This callback must have a 'success' function, and an 'error' function.
+Binding the url of the ktbs to 'ktbsUrl' is required too.
+      */
+      Polymer({
+        is: 'taaabs-base-create',
+
+        properties: {
+          
+          /**
+          *ID of the new base.
+          * 
+          *@attribute baseId
+          *@type String
+          */
+          baseId: {
+            type: String,
+            notify: true,
+            observer: "_baseIdChanged",
+            reflectToAttribute: true
+          },
+          
+          /**
+          *Label of the new base.
+          * 
+          *@attribute baseLabel
+          *@type String
+          */
+          baseLabel: {
+            type: String,
+            notify: true,
+            observer: "_baseLabelChanged",
+            reflectToAttribute: true
+          },
+          
+          /**
+           * The callback which will get the response from the kTBS.
+           */
+          callback: {
+            type: Object,
+            notify: true,
+            value: undefined
+          },
+          
+          /**
+           * The kTBS object as we get it with Samotrace.
+           */
+          ktbs: {
+            type: Object,
+            notify: true,
+          },
+          
+          /**
+           * The url of the kTBS.
+           */
+          ktbsUrl: {
+            type: String,
+            notify: true,
+          },
+          
+          /**
+           * The baseId will change according to the baseLabel if set to true.
+           */
+          linkActive: {
+            type: Boolean,
+            notify: true,
+            value: true
+          },
+          
+          /**
+           * The post message sent to the kTBS.
+           */
+          message: {
+            type: String,
+            notify: true
+          },
+          
+          /**
+           * The status of this component.
+           * Set to 'done' if a label and an ID are typed, and if the ID is correct.
+           * Set to 'incomplete' if only a valid ID is typed.
+           * Set to 'invalid' the rest of the time.
+           */
+          status: {
+            type: String,
+            notify: true,
+            reflectToAttribute: true,
+            value: "invalid" // can be 'incomplete' and 'done'.
+          }
+          
+          
+          
+        },
+        
+        ready: function() {
+          // We get the ktbs object from the remote server.
+          if(typeof Samotraces !== 'undefined')
+            this.ktbs = new Samotraces.Ktbs.Ktbs(this.ktbsUrl);
+        },
+        
+        /**
+         * POST a request to create a new base.
+         */
+        createBase: function(){
+        
+          var that = this;
+          
+          /*
+          var nextCallback = {
+            success: function(data){
+              console.log("next Callback");
+              console.log(data);
+            },
+            reject: function(data){
+              console.log("data");
+            }
+          }
+          
+          var callback = {
+            success: function(){
+              console.log("premier callback succes");
+              that.ktbs.force_state_refresh.bind(this, nextCallback.success, nextCallback.reject);
+              
+            },
+            error: function(){
+              console.log("ouille");
+            }
+          }
+          
+          this.ktbs.create_base(this.baseId, this.baseLabel, callback);
+        */
+        
+           this.message =  '@prefix : <http://liris.cnrs.fr/silex/2009/ktbs#> .\n'
+                          +'@prefix skos: <http://www.w3.org/2004/02/skos/core#> .\n'
+                          +'<> :hasBase <'+this.baseId+'/>.\n'
+                          +'<'+this.baseId+'/>\n'
+                          +'a :Base ;\n'
+                          +'skos:prefLabel "'+this.baseLabel+'".';
+           this._postMessage();   
+        },
+        
+        isInvalid: function(){
+          return this.$.baseIdInput.invalid;
+        },
+        
+        /**
+         * Triggered when the baseID is changed. 
+         * Check if the value is valid.
+         */
+        _baseIdChanged: function(){
+          if(this.ktbs !== undefined){
+            var exists = false;
+            for(var i = 0; i < this.ktbs.bases.length; i++){
+              if(this.baseId+'/' === this.ktbs.bases[i]){
+                this.$.baseIdInput.invalid = true;
+                this.$.baseIdIcon.style.color = "red";
+                this.$.baseIdIcon.icon = "warning";
+                this.$.baseIdInput.errorMessage = "Cet ID est déjà utilisé par une autre base."
+                exists = true;
+              }              
+            }
+            
+            if(this.baseId.search(/[\\\s/]/) !== -1){
+              this.$.baseIdInput.invalid = true;
+              this.$.baseIdIcon.style.color = "red";
+              this.$.baseIdIcon.icon = "warning";
+              this.$.baseIdInput.errorMessage = "Cet ID comporte un caractère interdit."
+              exists = true;
+            }
+            
+            if(!exists){
+              this.$.baseIdInput.invalid = false;
+              this.$.baseIdIcon.icon = "create";
+              this.$.baseIdIcon.style.color = "grey";
+            }
+          }
+        },
+        
+        /**
+         * Triggered when the baseLabel has changed.
+         * Change the baseId too according to the label.
+         */
+        _baseLabelChanged: function(){
+          if(this.linkActive){
+            this.baseId = this._formatForId(this.baseLabel);
+          }
+        },
+        
+        /**
+         * Triggered when the POST request returns an error message.
+         */
+        error: function(data){
+          alert(data.response);
+        },
+        
+        /**
+         * Remove the invalid char from a string to match with base ID's formats.
+         */
+        _formatForId: function(text){
+          return text.replace(/ /g,'-');          
+        },
+        
+        /**
+         * Sends a HTTP request.
+         */
+        _http: function(url){
+          // Un exemple d'objet
+          var core = {      
+            // La méthode qui effectue la requête AJAX
+            ajax : function (method, url, args) {  
+              // On établit une promesse en retour
+              var promise = new Promise( function (resolve, reject) { 
+                // On instancie un XMLHttpRequest
+                var client = new XMLHttpRequest();
+                var uri = url;
+                client.open(method, uri);
+                client.setRequestHeader('Content-Type', 'text/turtle');
+                client.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+                client.setRequestHeader('accept', 'text/turtle');
+                
+                client.send(args);
+                client.onload = function () {
+                  if (this.status >= 200 && this.status < 300) {
+                    // On utilise la fonction "resolve" lorsque this.status vaut 2xx
+                    resolve(this.response);
+                  } else {
+                    // On utilise la fonction "reject" lorsque this.status est différent de 2xx
+                    reject(this.statusText);
+                  }
+                };
+                client.onerror = function () {
+                  reject(this.statusText);
+                };
+              });
+              // Return the promise
+              return promise;
+            }
+          };
+    
+          // Pattern adaptateur
+          return {
+            'post' : function(args) {
+              return core.ajax('POST', url, args);
+            },
+          }
+        },
+        
+        /**
+         * POST the message to the remote kTBS.
+         * Uses this 'success' and 'error' functions if a callback is not defined.
+         */
+        _postMessage: function(){
+          if(this.callback === undefined){
+            this._http(this.ktbsUrl)
+              .post(this.message)
+              .then(this.success)
+              .catch(this.error); 
+          }
+          else{
+            this._http(this.ktbsUrl)
+              .post(this.message)
+              .then(this.callback.success)
+              .catch(this.callback.error);
+          }
+        },
+        
+         /**
+         * Triggered when the POST request returns a success message.
+         */               
+        success: function(data){
+          console.log(data);
+        },
+        
+        /**
+         * Triggered when the link buttons are clicked.
+         */
+        _toggleLink: function(){
+          this.linkActive = !this.linkActive;
+        }    
+    });
+  </script>
+
+</dom-module>
