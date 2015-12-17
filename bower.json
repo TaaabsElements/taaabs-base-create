@@ -18,8 +18,8 @@
   "license": "https://github.com/TaaabsElements/taaabs-base-create/LICENSE",
   "dependencies": {
     "polymer": "polymer/polymer#^1.0.0",
-    "paper-input": "polymerelements/paper-input#^1.0.0",
-    "paper-icon-buttond": "polymerelements/paper-icon-buttond#^1.0.0"
+    "paper-input": "polymerelements/paper-input",
+    "paper-icon-button": "polymerelements/paper-icon-button"
   },
   "devDependencies": {
     "iron-component-page": "polymerelements/iron-component-page#^1.0.0",
