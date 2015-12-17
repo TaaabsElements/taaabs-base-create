@@ -76,7 +76,7 @@
       /* global Polymer */
       
       /**
-<taaabs-base-create>` is a graphical element with 2 inputs: one to define a new base label, the other a new base ID.
+`<taaabs-base-create>` is a graphical element with 2 inputs: one to define a new base label, the other a new base ID.
 Binding a callback object to 'callback' is required to get the response of the request. This callback must have a 'success' function, and an 'error' function.
 Binding the url of the ktbs to 'ktbsUrl' is required too.
       */
@@ -112,8 +112,11 @@ Binding the url of the ktbs to 'ktbsUrl' is required too.
           },
           
           /**
-           * The callback which will get the response from the kTBS.
-           */
+          *The callback which will get the response from the kTBS.
+          * 
+          *@attribute callback.
+          *@type Object
+          */
           callback: {
             type: Object,
             notify: true,
@@ -121,24 +124,33 @@ Binding the url of the ktbs to 'ktbsUrl' is required too.
           },
           
           /**
-           * The kTBS object as we get it with Samotrace.
-           */
+          *The kTBS object as we get it with Samotrace.
+          * 
+          *@attribute ktbs.
+          *@type Object
+          */
           ktbs: {
             type: Object,
             notify: true,
           },
           
           /**
-           * The url of the kTBS.
-           */
+          *The url of the kTBS.
+          *
+          *@attribute ktbsUrl.
+          *@type String
+          */
           ktbsUrl: {
             type: String,
             notify: true,
           },
           
           /**
-           * The baseId will change according to the baseLabel if set to true.
-           */
+          *The baseId will change according to the baseLabel if set to true.
+          *
+          *@attribute linkActive.
+          *@type Boolean
+          */
           linkActive: {
             type: Boolean,
             notify: true,
@@ -146,28 +158,28 @@ Binding the url of the ktbs to 'ktbsUrl' is required too.
           },
           
           /**
-           * The post message sent to the kTBS.
-           */
+          *The post message sent to the kTBS.
+          *
+          *@attribute message.
+          *@type String
+          */
           message: {
             type: String,
             notify: true
           },
           
           /**
-           * The status of this component.
-           * Set to 'done' if a label and an ID are typed, and if the ID is correct.
-           * Set to 'incomplete' if only a valid ID is typed.
-           * Set to 'invalid' the rest of the time.
-           */
+          *The status of this component. ('done, 'incomplete', 'invalid').
+          *
+          *@attribute status.
+          *@type String
+          */
           status: {
             type: String,
             notify: true,
             reflectToAttribute: true,
             value: "invalid" // can be 'incomplete' and 'done'.
           }
-          
-          
-          
         },
         
         ready: function() {
