@@ -1,6 +1,6 @@
 {
   "name": "taaabs-base-create",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "A graphical element for creating a new base onto a kTBS.",
   "keywords": [
     "web-components",
@@ -18,8 +18,9 @@
   "license": "https://github.com/TaaabsElements/taaabs-base-create/LICENSE",
   "dependencies": {
     "polymer": "polymer/polymer#^1.0.0",
-    "paper-input": "polymerelements/paper-input",
-    "paper-icon-button": "polymerelements/paper-icon-button"
+    "app-localize-behavior": "PolymerElements/app-localize-behavior",
+    "iron-pages": "PolymerElements/iron-pages",
+    "iron-icons": "PolymerElements/iron-icons"
   },
   "devDependencies": {
     "iron-component-page": "polymerelements/iron-component-page#^1.0.0",
