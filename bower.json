@@ -17,10 +17,10 @@
   "main": "taaabs-base-create.html",
   "license": "https://github.com/TaaabsElements/taaabs-base-create/LICENSE",
   "dependencies": {
-    "polymer": "polymer/polymer",
-    "app-localize-behavior": "PolymerElements/app-localize-behavior",
-    "iron-pages": "PolymerElements/iron-pages",
-    "iron-icons": "PolymerElements/iron-icons"
+    "polymer": "Polymer/polymer#<2.*",
+    "app-localize-behavior": "PolymerElements/app-localize-behavior#<2.*",
+    "iron-pages": "PolymerElements/iron-pages#<2.*",
+    "iron-icons": "PolymerElements/iron-icons#<2.*"
   },
   "devDependencies": {
     "iron-component-page": "polymerelements/iron-component-page#^1.0.0",
