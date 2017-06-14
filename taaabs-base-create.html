@@ -1,11 +1,33 @@
-<link rel="import" href="../taaabs-themes/taaabs-theme.html">
-<link rel="import" href="../notify-toast-behavior/notify-toast-behavior.html">
 <link rel="import" href="../app-localize-behavior/app-localize-behavior.html">
-<link rel="import" href="../iron-pages/iron-pages.html">
 <link rel="import" href="../iron-icon/iron-icon.html">
 <link rel="import" href="../iron-icons/iron-icons.html">
-<link rel="import" href="../paper-input/paper-textarea.html">
+<link rel="import" href="../iron-pages/iron-pages.html">
+<link rel="import" href="../notify-toast-behavior/notify-toast-behavior.html">
 <link rel="import" href="../paper-button/paper-button.html">
+<link rel="import" href="../paper-input/paper-input.html">
+<link rel="import" href="../paper-input/paper-textarea.html">
+<link rel="import" href="../taaabs-taaabs/taaabs-taaabs.html">
+<link rel="import" href="../taaabs-themes/taaabs-theme.html">
+
+<!--
+
+# taaabs-base-create
+
+`<taaabs-base-create>` is a graphical element for creating a new base onto a kTBS or a base.
+
+Example:
+
+    <taaabs-base-create id="tbc"
+                        base-url="SOURCE_BASE_URL"
+                        language="en"
+                        in-base>
+    </taaabs-base-create>
+
+or
+
+    var elem = new TAAABS.BaseCreate("SOURCE_BASE_URL", true);
+    
+-->
 <dom-module id="taaabs-base-create">
   <template>
     <style include="taaabs-theme"></style>
@@ -13,7 +35,6 @@
       :host {
         display: block;
       }
-
       :host .editIcons {
         float: right;
         cursor: pointer;
@@ -46,18 +67,27 @@
 
     <!-- Notify toast -->
     <paper-toast id="__notify_toast__" style="background-color:rgba(0,0,0,0.37)" duration=0> </paper-toast>
-
   </template>
   <script>
-    Polymer({
+    TAAABS.BaseCreate = Polymer({
       is: 'taaabs-base-create',
+
+      /**
+       * Fired when the enw base has been created.
+       *
+       * @event base-created
+       * @param {String} base_path The new base path (i.e. the base url relative to `baseRelativeUrl`).
+       */
 
       properties: {
 
+        /** ================================================================ **/
+        /**  Public Properties                                               **/
+
         /**
-         * Either the future root ktbs, or the root base.
+         * The root url of the created base.
          *
-         * @attribute source
+         * @attribute baseUrl
          * @type String
          */
         baseUrl: {
@@ -66,22 +96,16 @@
           value: ""
         },
 
+        /**
+         * The root url, minor it's own root. Basically the root id.
+         *
+         * @attribute baseRelativeUrl
+         * @type String
+         */
         baseRelativeUrl: {
           type: String,
           notify: true,
           value: ""
-        },
-
-        _base: {
-          type: Object,
-          notify: true,
-          observer: '_onBaseChange'
-        },
-
-        taaabsCentralLoading: {
-          type: Boolean,
-          notify: true,
-          value: false
         },
 
         /**
@@ -97,11 +121,51 @@
           value: false
         },
 
-        _loadingBaseToast: {
-          type: Number,
+        /**
+         * Localization.
+         * fr, en.
+         *
+         * @attribute language
+         * @type String
+         */
+        language: {
+          type: String,
+          notify: true,
+        },
+
+        /**
+         * Set to true if using a <taaabs-resource-loader> to load the root of the created base.
+         * Set to false otherwise.
+         *
+         * @attribute taaabsCentralLoading
+         * @type Boolean
+         */
+        taaabsCentralLoading: {
+          type: Boolean,
+          notify: true,
+          value: false
+        },
+
+        /** ================================================================ **/
+        /**  Private Properties                                              **/
+
+        /**
+         * The root base.
+         *
+         * @attribute _base
+         * @type Object
+         */
+        _base: {
+          type: Object,
           notify: true
         },
 
+        /**
+         * ID of the `notify-toast` that is displayed when creating the new base.
+         *
+         * @attribute _creatingBaseToast
+         * @type Number
+         */
         _creatingBaseToast: {
           type: Number,
           notify: true
@@ -144,10 +208,10 @@
         },
 
         /**
-         * True if the base id is onvalid.
+         * True if the base id is valid.
          * False otherwise.
          *
-         * @attribute _invalidId
+         * @attribute _validId
          * @type Boolean
          */
         _validId: {
@@ -166,19 +230,7 @@
           type: String,
           notify: true,
           value: ''
-        },
-
-        /**
-         * Localization.
-         * fr, en.
-         *
-         * @attribute language
-         * @type String
-         */
-        language: {
-          type: String,
-          notify: true,
-        },
+        }
       },
 
       listeners: {
@@ -190,22 +242,40 @@
         NotifyToastBehavior
       ],
 
-      ready: function() {},
+      /** ================================================================== **/
+      /**  Contructors / Init / Destructor                                   **/
 
+      /**
+       * Default constructor. Calls `_emptyAllProperties`.
+       *
+       * @param {String} baseUrl Optionnal url of the root of the created base.
+       * @param {Boolean} inBase Optionnal boolean, set to true if the created base is a sub-base of a base. False otherwise.
+       *
+       * @method factoryImpl
+       */
+      factoryImpl: function(baseUrl, inBase) {
+        this._emptyAllProperties();
+        this.set('baseUrl', baseUrl);
+        this.set('inBase', inBase);
+      },
+
+      /**
+       * Loads the i18n resources.
+       *
+       * @method attached
+       */
       attached: function() {
         // Load i18n json.
         this.loadResources(this.resolveUrl('./language/locales.json'));
       },
 
       /**
-       * Reset the base Id, label & comment.
+       * Loads the root base.
        *
        * @method refresh
        */
       refresh: function() {
-        this.set('_baseId', '');
-        this.set('_baseLabel', '');
-        this.set('_baseComment', '');
+        this._emptyAllProperties();
         // If we use a resoure-loader, well, we let it load the resources then.
         if (this.taaabsCentralLoading)
           this.fire('GET_RESOURCE', {
@@ -217,19 +287,43 @@
           this.set('_base', new Samotraces.Ktbs.Base(this.baseUrl));
       },
 
-      _onBaseChange: function(){
+      /**
+       * Calls `_emptyAllProperties`.
+       *
+       * @method clear
+       */
+      clear: function(){
+        this._emptyAllProperties();
       },
 
-      /** ----------------------------------------------------------------------
-      // MARK: Input change listeners
-      **/
+      /**
+       * Set all the properties to their default value.
+       *
+       * @method _emptyAllProperties
+       */
+      _emptyAllProperties: function(){
+        this.set('_baseId', '');
+        this.set('_baseLabel', '');
+        this.set('_baseComment', '');
+      },
 
+      /** ================================================================== **/
+      /**  Input Change Listeners                                            **/
+
+      /**
+       * On base ID input change. Check if the new base id is valid or not.
+       *
+       * @method _onBaseIdInputChange
+       */
       _onBaseIdInputChange: function(){
         var forbidden_names = [];
+        // Put the existing ids in the forbidden names.
         for(var i = 0; i < this._base.contains.length; i++){
           forbidden_names.push(this._base.contains[i]['@id'].replace('/',''));
         }
         var forbidden_symbols = [' ', '/', '#', '-'];
+        // If the base id is already existing, set it as invalid.
+        // Otherwise, checks if it has invalid symbols.
         if( forbidden_names.indexOf(this._baseId) !== -1 ){
           this.$['validate-btn'].set('disabled', true);
           this.$['base-id-input'].set('errorMessage', this.localize('id-already-exists'));
@@ -254,6 +348,8 @@
         }
       },
 
+      /** ================================================================== **/
+      /**  Validate / Cancel                                                 **/
 
       /**
        * Called on `cancel` click.
@@ -264,6 +360,11 @@
         this.fire('base-creation-canceled');
       },
 
+      /**
+       * Calls `_submit`.
+       *
+       * @method _onValidateClick
+       */
       _onValidateClick: function() {
         var cbt = this.notifyToast(this.localize('submit-base-loading'), {
           type: 'Loading',
@@ -273,8 +374,11 @@
         this._submit();
       },
 
+      /** ================================================================== **/
+      /**  Create New Base                                                   **/
+
       /**
-       * Called on `subit` click. Create the new base.
+       * Create the new base.
        *
        * @method _submit
        */
@@ -283,18 +387,14 @@
           .then(function(base) {
             this.closeToast(this._creatingBaseToast);
             var new_base_path = this.baseRelativeUrl + this._baseId + '/';
-            this.set('_baseId', '');
-            this.set('_baseLabel', '');
-            this.set('_baseComment', '');
+            this._emptyAllProperties();
             this.fire('base-created', {
               base_path: new_base_path
             });
           }.bind(this))
           .catch(function(err) {
             this.closeToast(this._creatingBaseToast);
-            this.set('_baseId', '');
-            this.set('_baseLabel', '');
-            this.set('_baseComment', '');
+            this._emptyAllProperties();
             this.notifyToast(this.localize('submit-error'),{
               type: 'Error',
               timeout: -1
